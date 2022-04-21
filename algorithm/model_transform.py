@@ -1,15 +1,107 @@
-from calendar import EPOCH
-from operator import mod
-from statistics import mode
+import collections
+import math
+import warnings
+
 import torch
 import torch.nn as nn
 import torch.utils.checkpoint as checkpoint
 
 
-import torch
-import torch.nn as nn
-import torch.utils.checkpoint as checkpoint
-from timm.models.layers import DropPath, to_2tuple, trunc_normal_
+def drop_path(x, drop_prob: float = 0., training: bool = False, scale_by_keep: bool = True):
+    """Drop paths (Stochastic Depth) per sample (when applied in main path of residual blocks).
+
+    This is the same as the DropConnect impl I created for EfficientNet, etc networks, however,
+    the original name is misleading as 'Drop Connect' is a different form of dropout in a separate paper...
+    See discussion: https://github.com/tensorflow/tpu/issues/494#issuecomment-532968956 ... I've opted for
+    changing the layer and argument names to 'drop path' rather than mix DropConnect as a layer name and use
+    'survival rate' as the argument.
+
+    """
+    if drop_prob == 0. or not training:
+        return x
+    keep_prob = 1 - drop_prob
+    shape = (x.shape[0],) + (1,) * (x.ndim - 1)  # work with diff dim tensors, not just 2D ConvNets
+    random_tensor = x.new_empty(shape).bernoulli_(keep_prob)
+    if keep_prob > 0.0 and scale_by_keep:
+        random_tensor.div_(keep_prob)
+    return x * random_tensor
+
+def _ntuple(n):
+    def parse(x):
+        if isinstance(x, collections.abc.Iterable):
+            return x
+        return tuple(repeat(x, n))
+    return parse
+
+def trunc_normal_(tensor, mean=0., std=1., a=-2., b=2.):
+    # type: (Tensor, float, float, float, float) -> Tensor
+    r"""Fills the input Tensor with values drawn from a truncated
+    normal distribution. The values are effectively drawn from the
+    normal distribution :math:`\mathcal{N}(\text{mean}, \text{std}^2)`
+    with values outside :math:`[a, b]` redrawn until they are within
+    the bounds. The method used for generating the random values works
+    best when :math:`a \leq \text{mean} \leq b`.
+    Args:
+        tensor: an n-dimensional `torch.Tensor`
+        mean: the mean of the normal distribution
+        std: the standard deviation of the normal distribution
+        a: the minimum cutoff value
+        b: the maximum cutoff value
+    Examples:
+        >>> w = torch.empty(3, 5)
+        >>> nn.init.trunc_normal_(w)
+    """
+    return _no_grad_trunc_normal_(tensor, mean, std, a, b)
+
+def _no_grad_trunc_normal_(tensor, mean, std, a, b):
+    # Cut & paste from PyTorch official master until it's in a few official releases - RW
+    # Method based on https://people.sc.fsu.edu/~jburkardt/presentations/truncated_normal.pdf
+    def norm_cdf(x):
+        # Computes standard normal cumulative distribution function
+        return (1. + math.erf(x / math.sqrt(2.))) / 2.
+
+    if (mean < a - 2 * std) or (mean > b + 2 * std):
+        warnings.warn("mean is more than 2 std from [a, b] in nn.init.trunc_normal_. "
+                      "The distribution of values may be incorrect.",
+                      stacklevel=2)
+
+class repeat(object):
+    """
+    repeat(object [,times]) -> create an iterator which returns the object
+    for the specified number of times.  If not specified, returns the object
+    endlessly.
+    """
+    def __getattribute__(self, *args, **kwargs): # real signature unknown
+        """ Return getattr(self, name). """
+        pass
+
+    def __init__(self, p_object, times=None): # real signature unknown; restored from __doc__
+        pass
+
+    def __iter__(self, *args, **kwargs): # real signature unknown
+        """ Implement iter(self). """
+        pass
+
+    def __length_hint__(self, *args, **kwargs): # real signature unknown
+        """ Private method returning an estimate of len(list(it)). """
+        pass
+
+to_1tuple = _ntuple(1)
+to_2tuple = _ntuple(2)
+to_3tuple = _ntuple(3)
+to_4tuple = _ntuple(4)
+to_ntuple = _ntuple
+
+class DropPath(nn.Module):
+    """Drop paths (Stochastic Depth) per sample  (when applied in main path of residual blocks).
+    """
+    def __init__(self, drop_prob=None, scale_by_keep=True):
+        super(DropPath, self).__init__()
+        self.drop_prob = drop_prob
+        self.scale_by_keep = scale_by_keep
+
+    def forward(self, x):
+        return drop_path(x, self.drop_prob, self.training, self.scale_by_keep)
 
 
 class Mlp(nn.Module):
