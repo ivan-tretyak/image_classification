@@ -6,13 +6,16 @@ app = Flask(__name__)
 #model = load_model()
 clss = get_clss()
 
-@app.route('/', methods=["POST"])
+@app.route('/', methods=["POST", "GET"])
 def hello_world():  # put application's code here
-    data = request.data
-    data = json.loads(data)
-    #image = string_to_PIL(data['image'])
-    #cls = main(model, clss, image)
-    return json.dumps(data)
+    if request.method == "POST":
+        data = request.data
+        data = json.loads(data)
+        #image = string_to_PIL(data['image'])
+        #cls = main(model, clss, image)
+        return json.dumps(data)
+    else:
+        return json.dumps({'state':'ok'})
 
 if __name__ == '__main__':
     app.run()
