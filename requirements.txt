@@ -1,4 +1,4 @@
 flask
-torchvision
+torchvision-cpu
 pillow
 timm
