@@ -1,13 +1,14 @@
 import base64
 import io
+import re
+
+import torchvision
 from torchvision import transforms
 from PIL import Image
-import torch
-from algorithm.model_transform import SwinTransformer
 
 
-def string_to_PIL(base64string):
-    base = base64.b64decode(base64string)
+def string_to_PIL(json):
+    base = base64.b64decode(json['data']['src'])
     return Image.open(io.BytesIO(base))
 
 def get_tensor_by_PIL(pil, size):
@@ -16,9 +17,15 @@ def get_tensor_by_PIL(pil, size):
     tensor = convert_tensor(img)
     return tensor.unsqueeze(0)
 
-def main(model, clss, PIL_image):
-    cls_index = model.forward(get_tensor_by_PIL(PIL_image, (384, 384))).argmax()
-    return clss[cls_index]
+def main(model, json):
+    clss = get_clss()
+    pil_image = string_to_PIL(json)
+    cls_index = model.forward(get_tensor_by_PIL(pil_image, (384, 384))).argmax()
+    cls = clss[cls_index]
+    cls_number = re.match('n\d{8}', cls)[0]
+    cls = cls.split(f"{cls_number} ")
+    cls[0] = cls_number
+    return cls
 
 def get_clss():
     clss = []
@@ -28,8 +35,6 @@ def get_clss():
     return clss
 
 def load_model():
-    model = SwinTransformer(img_size=384, drop_path_rate=0.2,
-                            embed_dim=192, depths=[2, 2, 18, 2],
-                            num_heads=[6, 12, 24, 48], window_size=12)
-    model.load_state_dict(torch.load('algorithm/swin_large_patch4_window12_384_22kto1k.pth')['model'])
+    model = torchvision.models.efficientnet_b7(pretrained=True)
+    model.eval()
     return model
