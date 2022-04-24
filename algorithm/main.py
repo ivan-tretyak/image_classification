@@ -35,6 +35,6 @@ def get_clss():
     return clss
 
 def load_model():
-    model = torchvision.models.regnet_x_8gf(pretrained=True)
+    model = torchvision.models.squeezenet1_1(pretrained=True)
     model.eval()
     return model
