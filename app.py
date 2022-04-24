@@ -5,7 +5,9 @@ from jsonapi.utils import *
 from jsonapi.validate import validate_json
 
 app = Flask(__name__)
+print('Model load')
 model = load_model()
+print('Model loaded')
 
 
 class ImageClassifier(views.MethodView):

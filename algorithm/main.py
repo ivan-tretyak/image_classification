@@ -35,6 +35,6 @@ def get_clss():
     return clss
 
 def load_model():
-    model = torchvision.models.efficientnet_b7(pretrained=True)
+    model = torchvision.models.regnet_x_8gf(pretrained=True)
     model.eval()
     return model
