@@ -10,6 +10,7 @@ COPY algorithm /root/imageClassification/algorithm
 COPY jsonapi /root/imageClassification/jsonapi
 COPY requirements.txt /root/imageClassification
 COPY app.py /root/imageClassification
+COPY Procfile /root/imageClassification
 RUN pip install -r requirements.txt
 
-ENTRYPOINT ["gunicorn", "app:app", "-b 0.0.0.0:80"]
+ENTRYPOINT ["gunicorn", "app:app"]
