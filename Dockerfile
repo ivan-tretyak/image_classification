@@ -13,4 +13,4 @@ COPY app.py /root/imageClassification
 COPY Procfile /root/imageClassification
 RUN pip install -r requirements.txt
 
-ENTRYPOINT ["gunicorn", "app:app"]
+ENTRYPOINT ["gunicorn", "app:app", "-b 0.0.0.0:80"]

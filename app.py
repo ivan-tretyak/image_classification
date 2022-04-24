@@ -39,7 +39,6 @@ app.register_error_handler(404, resource_not_exists)
 app.register_error_handler(500, server_error)
 app.register_error_handler(405, method_is_not_allowed)
 app.register_error_handler(400, handle_invalid_usage)
-app.register_error_handler(Exception, server_error)
 
 if __name__ == '__main__':
     app.run()
