@@ -35,6 +35,6 @@ def get_clss():
     return clss
 
 def load_model():
-    model = torchvision.models.squeezenet1_1(pretrained=True)
+    model = torchvision.models.mobilenet_v3_small(pretrained=True)
     model.eval()
     return model
