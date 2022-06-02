@@ -24,7 +24,7 @@ def main(model, json):
     cls = clss[cls_index]
     cls_number = re.match('n\d{8}', cls)[0]
     cls = cls.split(f"{cls_number} ")
-    cls[0] = cls_number
+    cls[0] = int(cls_index)
     return cls
 
 def get_clss():
